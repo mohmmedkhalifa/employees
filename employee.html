@@ -197,7 +197,10 @@
                         await this.loadRecentRecords();
                     } catch (error) {
                         console.error('Error recording attendance:', error);
-                        alert('حدث خطأ في تسجيل الحضور');
+                        this.attendanceMessage = '❌ حدث خطأ في تسجيل الحضور';
+                        setTimeout(() => {
+                            this.attendanceMessage = '';
+                        }, 3000);
                     } finally {
                         this.attendanceLoading = false;
                     }

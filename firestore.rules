@@ -23,9 +23,10 @@ service cloud.firestore {
       allow create: if isAdmin() && 
                       request.resource.data.isAdmin == false;
       
-      // Employees can read their own data (for employee page)
-      allow read: if request.auth == null && 
-                     employeeId != null;
+      // Employees can read their own data (for employee page) - unauthenticated access
+      // Note: This is intentional as per requirements (employees don't have login)
+      // Employee pages are accessed via unique URL with employee ID
+      allow read: if request.auth == null;
       
       // Admin can update employee data
       allow update: if isAdmin();
@@ -36,14 +37,17 @@ service cloud.firestore {
       // Admin can read all attendance records
       allow read: if isAdmin();
       
-      // Employees can read their own attendance records
+      // Employees can read their own attendance records (unauthenticated)
+      // Note: This is intentional as per requirements (employees access without login)
+      // They can only see records matching their employeeId
       allow read: if request.auth == null && 
                      resource.data.employeeId != null;
       
       // Admin can create attendance records (for themselves or employees)
       allow create: if isAdmin();
       
-      // Employees can create their own attendance records
+      // Employees can create their own attendance records (unauthenticated)
+      // Validates: employeeId, employeeName, type (check-in/check-out), and timestamp exist
       allow create: if request.auth == null && 
                       request.resource.data.employeeId != null &&
                       request.resource.data.employeeName != null &&

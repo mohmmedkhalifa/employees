@@ -294,6 +294,23 @@ body {
     padding: 10px;
     background: #d5f4e6;
     border-radius: 8px;
+    margin-top: 10px;
+}
+
+.error {
+    color: #e74c3c;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.error-message {
+    color: #e74c3c;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background: #fadbd8;
+    border-radius: 8px;
+    margin-top: 10px;
 }
 
 /* Employee Form */

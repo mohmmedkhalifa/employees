@@ -57,6 +57,7 @@
                     <button @click="saveAdminProfile" :disabled="!adminName.trim()">
                         حفظ
                     </button>
+                    <p v-if="errorMessage" class="error">{{ errorMessage }}</p>
                 </div>
             </div>
         </div>
@@ -222,7 +223,8 @@
                     attendanceMessage: '',
                     attendanceLoading: false,
                     selectedEmployee: null,
-                    selectedEmployeeRecords: []
+                    selectedEmployeeRecords: [],
+                    errorMessage: ''
                 }
             },
             computed: {
@@ -325,7 +327,10 @@
                         await this.loadEmployees();
                     } catch (error) {
                         console.error('Error saving admin profile:', error);
-                        alert('حدث خطأ في حفظ البيانات');
+                        this.errorMessage = 'حدث خطأ في حفظ البيانات';
+                        setTimeout(() => {
+                            this.errorMessage = '';
+                        }, 3000);
                     }
                 },
                 async loadEmployees() {
@@ -367,7 +372,10 @@
                         await this.loadEmployees();
                     } catch (error) {
                         console.error('Error adding employee:', error);
-                        alert('حدث خطأ في إضافة الموظف');
+                        this.employeeMessage = '❌ حدث خطأ في إضافة الموظف';
+                        setTimeout(() => {
+                            this.employeeMessage = '';
+                        }, 3000);
                     }
                 },
                 async recordAttendance(type) {
@@ -393,7 +401,10 @@
                         }, 3000);
                     } catch (error) {
                         console.error('Error recording attendance:', error);
-                        alert('حدث خطأ في تسجيل الحضور');
+                        this.attendanceMessage = '❌ حدث خطأ في تسجيل الحضور';
+                        setTimeout(() => {
+                            this.attendanceMessage = '';
+                        }, 3000);
                     } finally {
                         this.attendanceLoading = false;
                     }
@@ -420,9 +431,16 @@
                 copyEmployeeLink(employeeId) {
                     const link = `${window.location.origin}/employee.html?id=${employeeId}`;
                     navigator.clipboard.writeText(link).then(() => {
-                        alert('تم نسخ الرابط! شاركه مع الموظف لتسجيل حضوره.');
+                        this.employeeMessage = '📋 تم نسخ الرابط! شاركه مع الموظف لتسجيل حضوره.';
+                        setTimeout(() => {
+                            this.employeeMessage = '';
+                        }, 3000);
                     }).catch(err => {
                         console.error('Error copying link:', err);
+                        this.errorMessage = '❌ حدث خطأ في نسخ الرابط';
+                        setTimeout(() => {
+                            this.errorMessage = '';
+                        }, 3000);
                     });
                 },
                 formatDate(timestamp) {

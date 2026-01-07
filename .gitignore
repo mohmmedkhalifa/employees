@@ -1,6 +1,9 @@
 # Firebase config (should be added by user)
 firebase-config.js
 
+# Allow production config
+!firebase-config-production.js
+
 # Logs
 *.log
 

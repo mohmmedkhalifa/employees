@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام إدارة حضور الموظفين</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <div v-if="loading" class="loading-screen">
+            <div class="spinner"></div>
+            <p>جاري التحميل...</p>
+        </div>
+
+        <!-- Admin Login -->
+        <div v-else-if="!user" class="login-container">
+            <div class="login-card">
+                <h1>🔐 تسجيل دخول الأدمن</h1>
+                <p>لوحة التحكم الخاصة بإدارة الموظفين</p>
+                <div class="login-form">
+                    <input 
+                        type="email" 
+                        v-model="loginEmail" 
+                        placeholder="البريد الإلكتروني"
+                        @keyup.enter="login"
+                    >
+                    <input 
+                        type="password" 
+                        v-model="loginPassword" 
+                        placeholder="كلمة المرور"
+                        @keyup.enter="login"
+                    >
+                    <button @click="login" :disabled="loginLoading">
+                        {{ loginLoading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول' }}
+                    </button>
+                    <p v-if="loginError" class="error">{{ loginError }}</p>
+                </div>
+                <div class="employee-access">
+                    <p>موظف؟ <a href="employee.html">سجل حضورك من هنا</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- First Time Admin Setup -->
+        <div v-else-if="user && !adminProfile" class="setup-container">
+            <div class="setup-card">
+                <h1>👋 مرحباً بك!</h1>
+                <p>يبدو أنك تسجل دخول لأول مرة. الرجاء إدخال اسمك:</p>
+                <div class="setup-form">
+                    <input 
+                        type="text" 
+                        v-model="adminName" 
+                        placeholder="اسم الأدمن"
+                        @keyup.enter="saveAdminProfile"
+                    >
+                    <button @click="saveAdminProfile" :disabled="!adminName.trim()">
+                        حفظ
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Dashboard -->
+        <div v-else class="dashboard">
+            <header class="dashboard-header">
+                <div class="header-content">
+                    <h1>📊 لوحة التحكم</h1>
+                    <div class="header-info">
+                        <div class="datetime">
+                            <p class="date">{{ currentDate }}</p>
+                            <p class="time">{{ currentTime }}</p>
+                        </div>
+                        <div class="admin-info">
+                            <p>مرحباً، {{ adminProfile.name }}</p>
+                            <button @click="logout" class="logout-btn">تسجيل الخروج</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="dashboard-content">
+                <!-- Admin Attendance Section -->
+                <div class="attendance-section card">
+                    <h2>⏰ تسجيل حضورك</h2>
+                    <div class="attendance-buttons">
+                        <button @click="recordAttendance('check-in')" class="btn-checkin" :disabled="attendanceLoading">
+                            ✅ تسجيل الحضور
+                        </button>
+                        <button @click="recordAttendance('check-out')" class="btn-checkout" :disabled="attendanceLoading">
+                            🚪 تسجيل الانصراف
+                        </button>
+                    </div>
+                    <p v-if="attendanceMessage" class="success-message">{{ attendanceMessage }}</p>
+                </div>
+
+                <!-- Add Employee Section -->
+                <div class="add-employee-section card">
+                    <h2>➕ إضافة موظف جديد</h2>
+                    <div class="employee-form">
+                        <input 
+                            type="text" 
+                            v-model="newEmployee.name" 
+                            placeholder="اسم الموظف"
+                        >
+                        <input 
+                            type="text" 
+                            v-model="newEmployee.position" 
+                            placeholder="المنصب"
+                        >
+                        <button @click="addEmployee" :disabled="!newEmployee.name.trim()">
+                            إضافة
+                        </button>
+                    </div>
+                    <p v-if="employeeMessage" class="success-message">{{ employeeMessage }}</p>
+                </div>
+
+                <!-- Search Employees Section -->
+                <div class="search-section card">
+                    <h2>🔍 البحث عن الموظفين</h2>
+                    <input 
+                        type="text" 
+                        v-model="searchQuery" 
+                        placeholder="ابحث باسم الموظف..."
+                        class="search-input"
+                    >
+                </div>
+
+                <!-- Employees List -->
+                <div class="employees-section card">
+                    <h2>👥 قائمة الموظفين ({{ filteredEmployees.length }})</h2>
+                    <div v-if="filteredEmployees.length === 0" class="no-data">
+                        <p>لا يوجد موظفين حالياً</p>
+                    </div>
+                    <div v-else class="employees-list">
+                        <div 
+                            v-for="employee in filteredEmployees" 
+                            :key="employee.id" 
+                            class="employee-item"
+                            @click="viewEmployeeAttendance(employee)"
+                        >
+                            <div class="employee-info">
+                                <h3>{{ employee.name }}</h3>
+                                <p v-if="employee.position">{{ employee.position }}</p>
+                                <p class="employee-id">ID: {{ employee.id.substring(0, 8) }}</p>
+                            </div>
+                            <div class="employee-actions">
+                                <button @click.stop="copyEmployeeLink(employee.id)" class="btn-link">
+                                    📋 نسخ الرابط
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Attendance Records -->
+                <div v-if="selectedEmployee" class="attendance-records card">
+                    <h2>📅 سجل دوام: {{ selectedEmployee.name }}</h2>
+                    <button @click="selectedEmployee = null" class="btn-close">إغلاق</button>
+                    <div v-if="selectedEmployeeRecords.length === 0" class="no-data">
+                        <p>لا توجد سجلات حضور</p>
+                    </div>
+                    <div v-else class="records-list">
+                        <div 
+                            v-for="record in selectedEmployeeRecords" 
+                            :key="record.id" 
+                            class="record-item"
+                        >
+                            <div class="record-type" :class="record.type">
+                                {{ record.type === 'check-in' ? '✅ حضور' : '🚪 انصراف' }}
+                            </div>
+                            <div class="record-time">
+                                <p class="record-date">{{ formatDate(record.timestamp) }}</p>
+                                <p class="record-time-text">{{ formatTime(record.timestamp) }}</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 from CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- Firebase SDK v9+ with module support -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+        import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, doc, setDoc, getDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Import Firebase config
+        import { firebaseConfig } from './firebase-config.js';
+
+        const { createApp } = Vue;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        createApp({
+            data() {
+                return {
+                    loading: true,
+                    user: null,
+                    adminProfile: null,
+                    adminName: '',
+                    loginEmail: '',
+                    loginPassword: '',
+                    loginError: '',
+                    loginLoading: false,
+                    currentTime: '',
+                    currentDate: '',
+                    employees: [],
+                    searchQuery: '',
+                    newEmployee: {
+                        name: '',
+                        position: ''
+                    },
+                    employeeMessage: '',
+                    attendanceMessage: '',
+                    attendanceLoading: false,
+                    selectedEmployee: null,
+                    selectedEmployeeRecords: []
+                }
+            },
+            computed: {
+                filteredEmployees() {
+                    if (!this.searchQuery.trim()) {
+                        return this.employees;
+                    }
+                    const query = this.searchQuery.toLowerCase();
+                    return this.employees.filter(emp => 
+                        emp.name.toLowerCase().includes(query)
+                    );
+                }
+            },
+            mounted() {
+                this.updateDateTime();
+                setInterval(this.updateDateTime, 1000);
+                
+                onAuthStateChanged(auth, async (user) => {
+                    this.user = user;
+                    if (user) {
+                        await this.loadAdminProfile();
+                        if (this.adminProfile) {
+                            await this.loadEmployees();
+                        }
+                    }
+                    this.loading = false;
+                });
+            },
+            methods: {
+                updateDateTime() {
+                    const now = new Date();
+                    
+                    // Arabic date format
+                    this.currentDate = new Intl.DateTimeFormat('ar', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }).format(now);
+                    
+                    // Arabic time format
+                    this.currentTime = new Intl.DateTimeFormat('ar', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    }).format(now);
+                },
+                async login() {
+                    if (!this.loginEmail || !this.loginPassword) {
+                        this.loginError = 'الرجاء إدخال البريد الإلكتروني وكلمة المرور';
+                        return;
+                    }
+                    
+                    this.loginLoading = true;
+                    this.loginError = '';
+                    
+                    try {
+                        await signInWithEmailAndPassword(auth, this.loginEmail, this.loginPassword);
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        this.loginError = 'خطأ في تسجيل الدخول. تحقق من البيانات المدخلة.';
+                    } finally {
+                        this.loginLoading = false;
+                    }
+                },
+                async logout() {
+                    try {
+                        await signOut(auth);
+                        this.adminProfile = null;
+                        this.employees = [];
+                    } catch (error) {
+                        console.error('Logout error:', error);
+                    }
+                },
+                async loadAdminProfile() {
+                    try {
+                        const docRef = doc(db, 'employees', this.user.uid);
+                        const docSnap = await getDoc(docRef);
+                        
+                        if (docSnap.exists()) {
+                            this.adminProfile = { id: docSnap.id, ...docSnap.data() };
+                        }
+                    } catch (error) {
+                        console.error('Error loading admin profile:', error);
+                    }
+                },
+                async saveAdminProfile() {
+                    if (!this.adminName.trim()) return;
+                    
+                    try {
+                        const adminData = {
+                            name: this.adminName.trim(),
+                            isAdmin: true,
+                            createdAt: Timestamp.now()
+                        };
+                        
+                        await setDoc(doc(db, 'employees', this.user.uid), adminData);
+                        this.adminProfile = { id: this.user.uid, ...adminData };
+                        await this.loadEmployees();
+                    } catch (error) {
+                        console.error('Error saving admin profile:', error);
+                        alert('حدث خطأ في حفظ البيانات');
+                    }
+                },
+                async loadEmployees() {
+                    try {
+                        const q = query(
+                            collection(db, 'employees'),
+                            where('isAdmin', '!=', true)
+                        );
+                        const querySnapshot = await getDocs(q);
+                        
+                        this.employees = [];
+                        querySnapshot.forEach((doc) => {
+                            this.employees.push({ id: doc.id, ...doc.data() });
+                        });
+                    } catch (error) {
+                        console.error('Error loading employees:', error);
+                    }
+                },
+                async addEmployee() {
+                    if (!this.newEmployee.name.trim()) return;
+                    
+                    try {
+                        const employeeData = {
+                            name: this.newEmployee.name.trim(),
+                            position: this.newEmployee.position.trim() || '',
+                            isAdmin: false,
+                            createdAt: Timestamp.now()
+                        };
+                        
+                        await addDoc(collection(db, 'employees'), employeeData);
+                        
+                        this.employeeMessage = '✅ تم إضافة الموظف بنجاح';
+                        this.newEmployee = { name: '', position: '' };
+                        
+                        setTimeout(() => {
+                            this.employeeMessage = '';
+                        }, 3000);
+                        
+                        await this.loadEmployees();
+                    } catch (error) {
+                        console.error('Error adding employee:', error);
+                        alert('حدث خطأ في إضافة الموظف');
+                    }
+                },
+                async recordAttendance(type) {
+                    this.attendanceLoading = true;
+                    this.attendanceMessage = '';
+                    
+                    try {
+                        const attendanceData = {
+                            employeeId: this.user.uid,
+                            employeeName: this.adminProfile.name,
+                            type: type,
+                            timestamp: Timestamp.now()
+                        };
+                        
+                        await addDoc(collection(db, 'attendance'), attendanceData);
+                        
+                        this.attendanceMessage = type === 'check-in' 
+                            ? '✅ تم تسجيل الحضور بنجاح' 
+                            : '🚪 تم تسجيل الانصراف بنجاح';
+                        
+                        setTimeout(() => {
+                            this.attendanceMessage = '';
+                        }, 3000);
+                    } catch (error) {
+                        console.error('Error recording attendance:', error);
+                        alert('حدث خطأ في تسجيل الحضور');
+                    } finally {
+                        this.attendanceLoading = false;
+                    }
+                },
+                async viewEmployeeAttendance(employee) {
+                    this.selectedEmployee = employee;
+                    
+                    try {
+                        const q = query(
+                            collection(db, 'attendance'),
+                            where('employeeId', '==', employee.id),
+                            orderBy('timestamp', 'desc')
+                        );
+                        const querySnapshot = await getDocs(q);
+                        
+                        this.selectedEmployeeRecords = [];
+                        querySnapshot.forEach((doc) => {
+                            this.selectedEmployeeRecords.push({ id: doc.id, ...doc.data() });
+                        });
+                    } catch (error) {
+                        console.error('Error loading attendance records:', error);
+                    }
+                },
+                copyEmployeeLink(employeeId) {
+                    const link = `${window.location.origin}/employee.html?id=${employeeId}`;
+                    navigator.clipboard.writeText(link).then(() => {
+                        alert('تم نسخ الرابط! شاركه مع الموظف لتسجيل حضوره.');
+                    }).catch(err => {
+                        console.error('Error copying link:', err);
+                    });
+                },
+                formatDate(timestamp) {
+                    const date = timestamp.toDate();
+                    return new Intl.DateTimeFormat('ar', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }).format(date);
+                },
+                formatTime(timestamp) {
+                    const date = timestamp.toDate();
+                    return new Intl.DateTimeFormat('ar', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    }).format(date);
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

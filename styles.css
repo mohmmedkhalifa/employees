@@ -1,0 +1,600 @@
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    padding: 20px;
+    direction: rtl;
+}
+
+/* Loading Screen */
+.loading-screen {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    color: white;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Login Container */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.login-card {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+}
+
+.login-card h1 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 2rem;
+}
+
+.login-card p {
+    color: #666;
+    margin-bottom: 30px;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 15px;
+    margin-bottom: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+}
+
+.login-form input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.login-form button {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.login-form button:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.login-form button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.error {
+    color: #e74c3c;
+    margin-top: 15px;
+    font-size: 14px;
+}
+
+.employee-access {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #e0e0e0;
+}
+
+.employee-access a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+/* Setup Container */
+.setup-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.setup-card {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+}
+
+.setup-card h1 {
+    color: #667eea;
+    margin-bottom: 10px;
+    font-size: 2rem;
+}
+
+.setup-form input {
+    width: 100%;
+    padding: 15px;
+    margin: 20px 0;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+.setup-form button {
+    width: 100%;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Dashboard */
+.dashboard {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.dashboard-header {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.header-content h1 {
+    color: #667eea;
+    font-size: 2rem;
+    margin-bottom: 20px;
+}
+
+.header-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+
+.datetime {
+    flex: 1;
+}
+
+.datetime .date {
+    font-size: 18px;
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.datetime .time {
+    font-size: 32px;
+    font-weight: bold;
+    color: #667eea;
+}
+
+.admin-info {
+    text-align: left;
+}
+
+.admin-info p {
+    color: #666;
+    margin-bottom: 10px;
+}
+
+.logout-btn {
+    padding: 10px 20px;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Dashboard Content */
+.dashboard-content {
+    display: grid;
+    gap: 30px;
+}
+
+.card {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card h2 {
+    color: #333;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+}
+
+/* Attendance Section */
+.attendance-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.btn-checkin,
+.btn-checkout {
+    padding: 20px;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.btn-checkin {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    color: white;
+}
+
+.btn-checkout {
+    background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+    color: white;
+}
+
+.btn-checkin:hover:not(:disabled),
+.btn-checkout:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.btn-checkin:disabled,
+.btn-checkout:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.success-message {
+    color: #27ae60;
+    font-weight: bold;
+    text-align: center;
+    padding: 10px;
+    background: #d5f4e6;
+    border-radius: 8px;
+}
+
+/* Employee Form */
+.employee-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 15px;
+}
+
+.employee-form input {
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+.employee-form button {
+    padding: 15px 30px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Search */
+.search-input {
+    width: 100%;
+    padding: 15px;
+    border: 2px solid #e0e0e0;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+/* Employees List */
+.employees-list {
+    display: grid;
+    gap: 15px;
+}
+
+.employee-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.employee-item:hover {
+    background: #e9ecef;
+    transform: translateX(-5px);
+}
+
+.employee-info h3 {
+    color: #333;
+    margin-bottom: 5px;
+}
+
+.employee-info p {
+    color: #666;
+    font-size: 14px;
+}
+
+.employee-id {
+    font-family: monospace;
+    font-size: 12px;
+    color: #999;
+}
+
+.btn-link {
+    padding: 10px 20px;
+    background: #667eea;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+/* Records */
+.records-list {
+    display: grid;
+    gap: 10px;
+}
+
+.record-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f8f9fa;
+    border-radius: 10px;
+}
+
+.record-type {
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.record-type.check-in {
+    background: #d5f4e6;
+    color: #27ae60;
+}
+
+.record-type.check-out {
+    background: #fadbd8;
+    color: #e74c3c;
+}
+
+.record-time {
+    text-align: left;
+}
+
+.record-date {
+    color: #333;
+    font-size: 14px;
+    margin-bottom: 3px;
+}
+
+.record-time-text {
+    color: #667eea;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.no-data {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+}
+
+.btn-close {
+    padding: 10px 20px;
+    background: #95a5a6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+
+/* Employee Page */
+.employee-page {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.employee-header {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.employee-header h1 {
+    color: #667eea;
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.position {
+    color: #666;
+    font-size: 18px;
+}
+
+.datetime-display {
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.datetime-display .date {
+    color: #333;
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.datetime-display .time {
+    color: #667eea;
+    font-size: 48px;
+    font-weight: bold;
+}
+
+.attendance-card {
+    background: white;
+    padding: 30px;
+    border-radius: 20px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
+}
+
+.attendance-card h2 {
+    color: #333;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Error Container */
+.error-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+}
+
+.error-card {
+    background: white;
+    padding: 40px;
+    border-radius: 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+}
+
+.error-card h1 {
+    color: #e74c3c;
+    margin-bottom: 15px;
+    font-size: 2rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
+
+    .header-info {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .admin-info {
+        text-align: center;
+    }
+
+    .datetime .time {
+        font-size: 24px;
+    }
+
+    .employee-form {
+        grid-template-columns: 1fr;
+    }
+
+    .attendance-buttons {
+        grid-template-columns: 1fr;
+    }
+
+    .employee-item {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+
+    .record-item {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .record-time {
+        text-align: center;
+    }
+
+    .datetime-display .time {
+        font-size: 36px;
+    }
+
+    .login-card,
+    .setup-card,
+    .error-card {
+        padding: 30px 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-header {
+        padding: 20px;
+    }
+
+    .card {
+        padding: 20px;
+    }
+
+    .datetime .time {
+        font-size: 20px;
+    }
+
+    .datetime-display .time {
+        font-size: 28px;
+    }
+}

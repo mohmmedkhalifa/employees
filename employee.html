@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تسجيل الحضور - الموظف</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <div v-if="loading" class="loading-screen">
+            <div class="spinner"></div>
+            <p>جاري التحميل...</p>
+        </div>
+
+        <div v-else-if="!employee" class="error-container">
+            <div class="error-card">
+                <h1>⚠️ خطأ</h1>
+                <p>لم يتم العثور على بيانات الموظف. الرجاء التأكد من الرابط.</p>
+            </div>
+        </div>
+
+        <div v-else class="employee-page">
+            <div class="employee-header">
+                <h1>مرحباً، {{ employee.name }} 👋</h1>
+                <p v-if="employee.position" class="position">{{ employee.position }}</p>
+            </div>
+
+            <div class="datetime-display">
+                <p class="date">{{ currentDate }}</p>
+                <p class="time">{{ currentTime }}</p>
+            </div>
+
+            <div class="attendance-card">
+                <h2>⏰ تسجيل الحضور والانصراف</h2>
+                <div class="attendance-buttons">
+                    <button 
+                        @click="recordAttendance('check-in')" 
+                        class="btn-checkin" 
+                        :disabled="attendanceLoading"
+                    >
+                        ✅ تسجيل الحضور
+                    </button>
+                    <button 
+                        @click="recordAttendance('check-out')" 
+                        class="btn-checkout" 
+                        :disabled="attendanceLoading"
+                    >
+                        🚪 تسجيل الانصراف
+                    </button>
+                </div>
+                <p v-if="attendanceMessage" class="success-message">{{ attendanceMessage }}</p>
+            </div>
+
+            <div class="recent-records card">
+                <h2>📅 آخر السجلات</h2>
+                <div v-if="recentRecords.length === 0" class="no-data">
+                    <p>لا توجد سجلات سابقة</p>
+                </div>
+                <div v-else class="records-list">
+                    <div 
+                        v-for="record in recentRecords" 
+                        :key="record.id" 
+                        class="record-item"
+                    >
+                        <div class="record-type" :class="record.type">
+                            {{ record.type === 'check-in' ? '✅ حضور' : '🚪 انصراف' }}
+                        </div>
+                        <div class="record-time">
+                            <p class="record-date">{{ formatDate(record.timestamp) }}</p>
+                            <p class="record-time-text">{{ formatTime(record.timestamp) }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Vue 3 from CDN -->
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    
+    <!-- Firebase SDK v9+ with module support -->
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { getFirestore, collection, addDoc, getDocs, query, where, orderBy, limit, doc, getDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js';
+        
+        // Import Firebase config
+        import { firebaseConfig } from './firebase-config.js';
+
+        const { createApp } = Vue;
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // Get employee ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const employeeId = urlParams.get('id');
+
+        createApp({
+            data() {
+                return {
+                    loading: true,
+                    employee: null,
+                    currentTime: '',
+                    currentDate: '',
+                    attendanceMessage: '',
+                    attendanceLoading: false,
+                    recentRecords: []
+                }
+            },
+            mounted() {
+                this.updateDateTime();
+                setInterval(this.updateDateTime, 1000);
+                this.loadEmployee();
+            },
+            methods: {
+                updateDateTime() {
+                    const now = new Date();
+                    
+                    // Arabic date format
+                    this.currentDate = new Intl.DateTimeFormat('ar', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }).format(now);
+                    
+                    // Arabic time format
+                    this.currentTime = new Intl.DateTimeFormat('ar', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: true
+                    }).format(now);
+                },
+                async loadEmployee() {
+                    if (!employeeId) {
+                        this.loading = false;
+                        return;
+                    }
+                    
+                    try {
+                        const docRef = doc(db, 'employees', employeeId);
+                        const docSnap = await getDoc(docRef);
+                        
+                        if (docSnap.exists() && !docSnap.data().isAdmin) {
+                            this.employee = { id: docSnap.id, ...docSnap.data() };
+                            await this.loadRecentRecords();
+                        }
+                    } catch (error) {
+                        console.error('Error loading employee:', error);
+                    } finally {
+                        this.loading = false;
+                    }
+                },
+                async loadRecentRecords() {
+                    try {
+                        const q = query(
+                            collection(db, 'attendance'),
+                            where('employeeId', '==', employeeId),
+                            orderBy('timestamp', 'desc'),
+                            limit(5)
+                        );
+                        const querySnapshot = await getDocs(q);
+                        
+                        this.recentRecords = [];
+                        querySnapshot.forEach((doc) => {
+                            this.recentRecords.push({ id: doc.id, ...doc.data() });
+                        });
+                    } catch (error) {
+                        console.error('Error loading recent records:', error);
+                    }
+                },
+                async recordAttendance(type) {
+                    this.attendanceLoading = true;
+                    this.attendanceMessage = '';
+                    
+                    try {
+                        const attendanceData = {
+                            employeeId: this.employee.id,
+                            employeeName: this.employee.name,
+                            type: type,
+                            timestamp: Timestamp.now()
+                        };
+                        
+                        await addDoc(collection(db, 'attendance'), attendanceData);
+                        
+                        this.attendanceMessage = type === 'check-in' 
+                            ? '✅ تم تسجيل الحضور بنجاح' 
+                            : '🚪 تم تسجيل الانصراف بنجاح';
+                        
+                        setTimeout(() => {
+                            this.attendanceMessage = '';
+                        }, 3000);
+                        
+                        await this.loadRecentRecords();
+                    } catch (error) {
+                        console.error('Error recording attendance:', error);
+                        alert('حدث خطأ في تسجيل الحضور');
+                    } finally {
+                        this.attendanceLoading = false;
+                    }
+                },
+                formatDate(timestamp) {
+                    const date = timestamp.toDate();
+                    return new Intl.DateTimeFormat('ar', {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    }).format(date);
+                },
+                formatTime(timestamp) {
+                    const date = timestamp.toDate();
+                    return new Intl.DateTimeFormat('ar', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        hour12: true
+                    }).format(date);
+                }
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

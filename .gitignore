@@ -1,0 +1,20 @@
+# Firebase config (should be added by user)
+firebase-config.js
+
+# Allow production config
+!firebase-config-production.js
+
+# Logs
+*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Temporary files
+*.tmp
+*.swp

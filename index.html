@@ -84,13 +84,21 @@
                 <!-- Admin Attendance Section -->
                 <div class="attendance-section card">
                     <h2>⏰ تسجيل حضورك</h2>
-                    <div class="attendance-buttons">
-                        <button @click="recordAttendance('check-in')" class="btn-checkin" :disabled="attendanceLoading">
-                            ✅ تسجيل الحضور
-                        </button>
-                        <button @click="recordAttendance('check-out')" class="btn-checkout" :disabled="attendanceLoading">
-                            🚪 تسجيل الانصراف
-                        </button>
+                    <div class="attendance-form">
+                        <textarea 
+                            v-model="attendanceNotes" 
+                            placeholder="ملاحظات (مثل: مكان العمل، المهمة، إلخ...)"
+                            class="attendance-notes"
+                            rows="2"
+                        ></textarea>
+                        <div class="attendance-buttons">
+                            <button @click="recordAttendance('check-in')" class="btn-checkin" :disabled="attendanceLoading">
+                                ✅ تسجيل الحضور
+                            </button>
+                            <button @click="recordAttendance('check-out')" class="btn-checkout" :disabled="attendanceLoading">
+                                🚪 تسجيل الانصراف
+                            </button>
+                        </div>
                     </div>
                     <p v-if="attendanceMessage" class="success-message">{{ attendanceMessage }}</p>
                 </div>
@@ -170,9 +178,13 @@
                             <div class="record-type" :class="record.type">
                                 {{ record.type === 'check-in' ? '✅ حضور' : '🚪 انصراف' }}
                             </div>
-                            <div class="record-time">
-                                <p class="record-date">{{ formatDate(record.timestamp) }}</p>
-                                <p class="record-time-text">{{ formatTime(record.timestamp) }}</p>
+                            <div class="record-details">
+                                <div class="record-time">
+                                    <p class="record-date">{{ formatDate(record.timestamp) }}</p>
+                                    <p class="record-time-text">{{ formatTime(record.timestamp) }}</p>
+                                </div>
+                                <p v-if="record.notes" class="record-notes">📝 {{ record.notes }}</p>
+                            </div>
                             </div>
                         </div>
                     </div>
@@ -222,6 +234,7 @@
                     employeeMessage: '',
                     attendanceMessage: '',
                     attendanceLoading: false,
+                    attendanceNotes: '',
                     selectedEmployee: null,
                     selectedEmployeeRecords: [],
                     errorMessage: ''
@@ -387,6 +400,7 @@
                             employeeId: this.user.uid,
                             employeeName: this.adminProfile.name,
                             type: type,
+                            notes: this.attendanceNotes.trim() || '',
                             timestamp: Timestamp.now()
                         };
                         
@@ -395,6 +409,8 @@
                         this.attendanceMessage = type === 'check-in' 
                             ? '✅ تم تسجيل الحضور بنجاح' 
                             : '🚪 تم تسجيل الانصراف بنجاح';
+                        
+                        this.attendanceNotes = ''; // Clear notes after submission
                         
                         setTimeout(() => {
                             this.attendanceMessage = '';
